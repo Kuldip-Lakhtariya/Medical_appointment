@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Will They Show Up? — Appointment No-Show Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal-deep: #1B4D4A;
+    --teal-mid: #2F6B66;
+    --sage: #7FA99B;
+    --warm-white: #FAF8F5;
+    --paper: #F1EDE6;
+    --coral: #E8836A;
+    --coral-soft: #F6DCD3;
+    --charcoal: #2A2D2D;
+    --line: #DDD6CC;
+    --green-good: #4F8A6B;
+    --amber-mid: #C98A3A;
+    --red-risk: #C5634D;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    line-height: 1.5;
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    background: var(--teal-deep);
+    color: var(--warm-white);
+    padding: 64px 24px 96px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(127,169,155,0.25), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(232,131,106,0.12), transparent 40%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sage);
+    font-weight: 600;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background: var(--sage);
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(36px, 6vw, 58px);
+    line-height: 1.08;
+    margin: 0 0 20px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--sage);
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: rgba(250,248,245,0.78);
+    max-width: 480px;
+    margin: 0 0 36px;
+  }
+
+  /* Signature element: wait-gap timeline strip */
+  .gap-strip {
+    background: rgba(250,248,245,0.06);
+    border: 1px solid rgba(250,248,245,0.14);
+    border-radius: 14px;
+    padding: 22px 26px;
+    max-width: 520px;
+  }
+
+  .gap-strip-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sage);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .gap-track {
+    position: relative;
+    height: 6px;
+    background: rgba(250,248,245,0.12);
+    border-radius: 3px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .gap-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 8%;
+    background: linear-gradient(90deg, var(--sage), var(--coral));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .gap-endpoints {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: rgba(250,248,245,0.6);
+  }
+
+  .gap-endpoints strong {
+    color: var(--warm-white);
+    font-weight: 600;
+    display: block;
+    font-size: 15px;
+    margin-top: 2px;
+  }
+
+  .gap-days {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--coral);
+  }
+
+  /* ============ FORM SECTION ============ */
+  .form-section {
+    max-width: 880px;
+    margin: -56px auto 80px;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: 18px;
+    padding: 40px;
+    box-shadow: 0 20px 60px -20px rgba(27,77,74,0.25);
+    border: 1px solid var(--line);
+  }
+
+  .card h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin: 0 0 6px;
+    color: var(--teal-deep);
+  }
+
+  .card .sub {
+    font-size: 14px;
+    color: #847D70;
+    margin: 0 0 32px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal-deep);
+    letter-spacing: 0.01em;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #9C958A;
+    margin-top: -4px;
+  }
+
+  input, select {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--teal-mid);
+    box-shadow: 0 0 0 3px rgba(47,107,102,0.12);
+  }
+
+  /* Toggle group for binary fields */
+  .toggle-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    margin-top: 8px;
+  }
+
+  .toggle-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toggle-pair {
+    display: flex;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--warm-white);
+  }
+
+  .toggle-pair input[type="radio"] {
+    display: none;
+  }
+
+  .toggle-pair label {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #9C958A;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    margin: 0;
+  }
+
+  .toggle-pair label:first-of-type {
+    border-right: 1.5px solid var(--line);
+  }
+
+  .toggle-pair input[type="radio"]:checked + label {
+    background: var(--teal-deep);
+    color: var(--warm-white);
+  }
+
+  .section-label {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--teal-deep);
+    margin: 36px 0 4px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+
+  .submit-row {
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  button.predict {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    background: var(--coral);
+    color: var(--warm-white);
+    border: none;
+    border-radius: 10px;
+    padding: 15px 32px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  button.predict:hover { background: #D6705A; }
+  button.predict:active { transform: scale(0.98); }
+  button.predict:disabled {
+    background: #C9C2B6;
+    cursor: not-allowed;
+  }
+
+  .error-msg {
+    font-size: 14px;
+    color: var(--red-risk);
+    font-weight: 500;
+  }
+
+  /* ============ RESULT ============ */
+  .result {
+    margin-top: 32px;
+    padding: 28px;
+    border-radius: 14px;
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .result.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .result-text {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .result.good {
+    background: rgba(79,138,107,0.1);
+    border: 1px solid rgba(79,138,107,0.25);
+  }
+  .result.good .result-eyebrow { color: var(--green-good); }
+
+  .result.warn {
+    background: rgba(201,138,58,0.1);
+    border: 1px solid rgba(201,138,58,0.25);
+  }
+  .result.warn .result-eyebrow { color: var(--amber-mid); }
+
+  .result.risk {
+    background: rgba(197,99,77,0.1);
+    border: 1px solid rgba(197,99,77,0.25);
+  }
+  .result.risk .result-eyebrow { color: var(--red-risk); }
+
+  /* ============ FOOTER NOTE ============ */
+  .note {
+    max-width: 880px;
+    margin: 0 auto 60px;
+    padding: 0 24px;
+    font-size: 13px;
+    color: #9C958A;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .grid, .toggle-group { grid-template-columns: 1fr; }
+    .card { padding: 28px 22px; }
+    .form-section { margin-top: -40px; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .gap-fill, .result { transition: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">No-Show Risk Estimator</div>
+    <h1>Will they <em>show up</em> for their appointment?</h1>
+    <p>Built on patterns from 110,000+ public health appointments — wait time, timing, and patient history all shape the odds.</p>
+
+    <div class="gap-strip">
+      <div class="gap-strip-label">Booking-to-visit gap</div>
+      <div class="gap-track"><div class="gap-fill" id="gapFill"></div></div>
+      <div class="gap-endpoints">
+        <div>Scheduled<strong id="schedLabel">—</strong></div>
+        <div style="text-align:center;"><span class="gap-days" id="gapDays">0</span><br>days</div>
+        <div style="text-align:right;">Appointment<strong id="apptLabel">—</strong></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="form-section">
+  <div class="card">
+    <h2>Patient & appointment details</h2>
+    <p class="sub">Fill in the fields below — the gap above updates as you pick dates.</p>
+
+    <div class="grid">
+      <div class="field">
+        <label for="age">Age</label>
+        <input type="number" id="age" min="0" max="115" placeholder="e.g. 34" required>
+      </div>
+      <div class="field">
+        <label for="gender">Gender</label>
+        <select id="gender" required>
+          <option value="" disabled selected>Select</option>
+          <option value="0">Female</option>
+          <option value="1">Male</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="scheduledDate">Date booked</label>
+        <input type="date" id="scheduledDate" required>
+      </div>
+      <div class="field">
+        <label for="scheduledTime">Time booked</label>
+        <input type="time" id="scheduledTime" required>
+      </div>
+
+      <div class="field full">
+        <label for="appointmentDate">Appointment date</label>
+        <input type="date" id="appointmentDate" required>
+        <div class="hint">Must be on or after the date booked.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Health & outreach</div>
+    <div class="toggle-group">
+      <div class="toggle-field">
+        <label>Has Scholarship (welfare program)</label>
+        <div class="toggle-pair" data-field="scholarship">
+          <input type="radio" name="scholarship" id="scholarship-no" value="0" checked><label for="scholarship-no">No</label>
+          <input type="radio" name="scholarship" id="scholarship-yes" value="1"><label for="scholarship-yes">Yes</label>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Hypertension</label>
+        <div class="toggle-pair" data-field="hypertension">
+          <input type="radio" name="hypertension" id="hyper-no" value="0" checked><label for="hyper-no">No</label>
+          <input type="radio" name="hypertension" id="hyper-yes" value="1"><label for="hyper-yes">Yes</label>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Diabetes</label>
+        <div class="toggle-pair" data-field="diabetes">
+          <input type="radio" name="diabetes" id="diabetes-no" value="0" checked><label for="diabetes-no">No</label>
+          <input type="radio" name="diabetes" id="diabetes-yes" value="1"><label for="diabetes-yes">Yes</label>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Alcoholism</label>
+        <div class="toggle-pair" data-field="alcoholism">
+          <input type="radio" name="alcoholism" id="alc-no" value="0" checked><label for="alc-no">No</label>
+          <input type="radio" name="alcoholism" id="alc-yes" value="1"><label for="alc-yes">Yes</label>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Handicap</label>
+        <div class="toggle-pair" data-field="handicap">
+          <input type="radio" name="handicap" id="handicap-no" value="0" checked><label for="handicap-no">No</label>
+          <input type="radio" name="handicap" id="handicap-yes" value="1"><label for="handicap-yes">Yes</label>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Received SMS reminder</label>
+        <div class="toggle-pair" data-field="sms">
+          <input type="radio" name="sms" id="sms-no" value="0" checked><label for="sms-no">No</label>
+          <input type="radio" name="sms" id="sms-yes" value="1"><label for="sms-yes">Yes</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="predict" id="predictBtn">Predict attendance</button>
+      <span class="error-msg" id="errorMsg"></span>
+    </div>
+
+    <div class="result" id="result">
+      <div class="result-eyebrow" id="resultEyebrow">Result</div>
+      <div class="result-text" id="resultText"></div>
+    </div>
+  </div>
+</div>
+
+<p class="note">Predictions are estimates based on historical patterns and should support, not replace, clinical judgment.</p>
+
+<script>
+  const API_URL = "/predict"; // update to deployed Flask endpoint
+
+  const scheduledDateEl = document.getElementById("scheduledDate");
+  const appointmentDateEl = document.getElementById("appointmentDate");
+  const gapFill = document.getElementById("gapFill");
+  const gapDays = document.getElementById("gapDays");
+  const schedLabel = document.getElementById("schedLabel");
+  const apptLabel = document.getElementById("apptLabel");
+
+  function formatLabel(dateStr) {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function updateGapStrip() {
+    const sched = scheduledDateEl.value;
+    const appt = appointmentDateEl.value;
+    schedLabel.textContent = formatLabel(sched);
+    apptLabel.textContent = formatLabel(appt);
+
+    if (sched && appt) {
+      const d1 = new Date(sched + "T00:00:00");
+      const d2 = new Date(appt + "T00:00:00");
+      const days = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+      gapDays.textContent = days >= 0 ? days : "—";
+      const pct = Math.min(100, Math.max(4, days * 1.1));
+      gapFill.style.width = days >= 0 ? pct + "%" : "8%";
+    } else {
+      gapDays.textContent = "0";
+      gapFill.style.width = "8%";
+    }
+  }
+
+  scheduledDateEl.addEventListener("change", updateGapStrip);
+  appointmentDateEl.addEventListener("change", updateGapStrip);
+
+  function getRadioValue(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? parseInt(checked.value, 10) : 0;
+  }
+
+  const predictBtn = document.getElementById("predictBtn");
+  const errorMsg = document.getElementById("errorMsg");
+  const resultBox = document.getElementById("result");
+  const resultText = document.getElementById("resultText");
+  const resultEyebrow = document.getElementById("resultEyebrow");
+
+  predictBtn.addEventListener("click", async () => {
+    errorMsg.textContent = "";
+    resultBox.classList.remove("visible", "good", "warn", "risk");
+
+    const age = document.getElementById("age").value;
+    const gender = document.getElementById("gender").value;
+    const scheduledDate = scheduledDateEl.value;
+    const scheduledTime = document.getElementById("scheduledTime").value;
+    const appointmentDate = appointmentDateEl.value;
+
+    if (!age || gender === "" || !scheduledDate || !scheduledTime || !appointmentDate) {
+      errorMsg.textContent = "Please fill in every field before predicting.";
+      return;
+    }
+
+    const payload = {
+      Age: parseInt(age, 10),
+      Gender: parseInt(gender, 10),
+      scheduled_date: scheduledDate,
+      scheduled_time: scheduledTime,
+      appointment_date: appointmentDate,
+      Scholarship: getRadioValue("scholarship"),
+      Hypertension: getRadioValue("hypertension"),
+      Diabetes: getRadioValue("diabetes"),
+      Alcoholism: getRadioValue("alcoholism"),
+      Handicap: getRadioValue("handicap"),
+      SMS_received: getRadioValue("sms")
+    };
+
+    predictBtn.disabled = true;
+    predictBtn.textContent = "Predicting…";
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorMsg.textContent = data.error || "Something went wrong. Please check the dates and try again.";
+        return;
+      }
+
+      const message = data.Result || "No result returned.";
+      resultText.textContent = message;
+
+      // Color-code based on message content
+      let cls = "warn";
+      if (message.toLowerCase().includes("will show up")) cls = "good";
+      else if (message.toLowerCase().includes("not show up")) cls = "risk";
+
+      let eyebrow = "Likely outcome";
+      if (cls === "warn") eyebrow = "Low confidence";
+
+      resultEyebrow.textContent = eyebrow;
+      resultBox.classList.add("visible", cls);
+
+    } catch (err) {
+      errorMsg.textContent = "Couldn't reach the prediction service. Is the API running?";
+    } finally {
+      predictBtn.disabled = false;
+      predictBtn.textContent = "Predict attendance";
+    }
+  });
+</script>
+
+</body>
+</html>
