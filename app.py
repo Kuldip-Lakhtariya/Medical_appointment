@@ -1,8 +1,9 @@
-from flask import Flask,request,jsonify
+from flask import Flask,request,jsonify,render_template
 import joblib
 import pandas as pd
 import numpy as np
 from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -33,6 +34,10 @@ def get_wait_group_order(wait_day):
     else:
         wait_day_order = 5
     return wait_day_order
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route("/predict",methods=["POST"])
 def predict():
