@@ -97,5 +97,5 @@ def health():
         return jsonify({"status":"error","model loaded":False}),500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",debug=False)
 
