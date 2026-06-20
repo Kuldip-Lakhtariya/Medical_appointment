@@ -166,4 +166,4 @@ docker run -p 5000:5000 noshow-api
  
 **Kuldip Lakhtariya**
 B.Tech ECE — LD College of Engineering, Ahmedabad
-[GitHub](https://github.com/Kuldip-Lakhtariya) · [LinkedIn](https://linkedin.com/in/kuldip-lakhtariya) · kuldip2611lakhtariya@gmail.com
+[GitHub](https://github.com/Kuldip-Lakhtariya) · [LinkedIn](https://www.linkedin.com/in/kuldip-lakhtariya-957106371/) · kuldip2611lakhtariya@gmail.com
